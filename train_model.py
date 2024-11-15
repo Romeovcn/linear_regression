@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 
 GREEN = "\033[92m"  # Green
 YELLOW = "\033[93m"  # Yellow
@@ -31,12 +30,18 @@ def get_sigma(array):
 	return sigma
 
 def hypothesis(X, thetas):
-    return X@thetas
+	"""
+	Method to calculate the hypothesis from a matrix X and thetas by performing a matrix multiplication.
+
+	Parameters: X (Matrix filled with the mileage and 1's), thetas (Matrix filled with thetas)
+	Returns: A matrix with the hypothesis
+	"""
+	return X@thetas
 
 def cost_calculate(X, y, thetas):
 	return np.sum((hypothesis(X, thetas) - y) **2) / (2 * len(y))
 
-def gradient_descent(thetas, X, y):
+def gradient(thetas, X, y):
 	learning_rate = 0.1
 	
 	tmp_theta_1 = thetas[1] - (learning_rate * np.sum((hypothesis(X, thetas) - y) * X[:, 1]) / len(y))
@@ -44,43 +49,49 @@ def gradient_descent(thetas, X, y):
 
 	return np.array([tmp_theta_0, tmp_theta_1])
 
+def gradient_descent(X, y):
+	thetas = np.array([0, 0])
+	new_cost = 0
+	max_iterations = 1000
+	cost = cost_calculate(X, y, thetas)
+
+	print(f'{YELLOW}Initial thetaA: {thetas[1]}, thetaB: {thetas[0]}, cost: {cost}{RESET}')
+
+	for i in range(max_iterations):
+		thetas = gradient(thetas, X, y)
+		new_cost = cost_calculate(X, y, thetas)
+		print(f'{YELLOW}New calculated thetaA: {thetas[1]}, thetaB: {thetas[0]}, cost: {new_cost}, iterations: {i}{RESET}')
+		if new_cost > cost or abs(new_cost - cost) < 1e-6:
+			break
+		cost = new_cost
+	
+	return thetas
+
 def main():
+	# --- Read data --- #
+	np.set_printoptions(suppress=True)
 	dataset = pd.read_csv('data.csv')
 	km = dataset['km'].values
-	price = dataset['price'].values
-	np.set_printoptions(suppress=True) # Disable scientific notation
 
+	# --- Normalize dataset --- #
 	km_mean = get_mean(km)
 	km_sigma = get_sigma(km)
 	km_normalized = (km - km_mean) / km_sigma
 
+	# --- Set variables --- #
 	m = len(km_normalized)
 	X = np.c_[np.ones(m), km_normalized]
-	y = price
+	y = dataset['price'].values
 
-	thetaA = thetaB = new_cost = i = 0
-	thetas = np.array([thetaB, thetaA])
-	cost = cost_calculate(X, y, thetas)
+	# --- Apply gradient descent --- #
+	thetas = gradient_descent(X, y)
 
-	print(f'{YELLOW}Initial thetaA: {thetas[1]} thetaB: {thetas[0]} cost: {cost}{RESET}')
-
-	while True:
-		thetas = gradient_descent(thetas, X, y)
-		new_cost = cost_calculate(X, y, thetas)
-		print(f'{YELLOW}New calculated thetaA: {thetas[1]} thetaB: {thetas[0]} cost: {new_cost}{RESET}')
-		if new_cost > cost:
-			break
-		cost = new_cost
-		i+=1
-
+	# --- Get result --- #
 	unnormalized_thetas = unnormalize_thetas(km, thetas)
-	print(f"{GREEN}Gradient descent is complete, theta_0: {unnormalized_thetas[0]}, theta_1: {unnormalized_thetas[1]} total iterations: {i}{RESET}")
-	# print_graph(km, y, unnormalized_thetas)
-	result_string = str(unnormalized_thetas)
-	# result_string = " ".join(result_string)
-	print(result_string)
-	# with open('thetas', 'w') as file:
-	# 	file.write(np.array2string(unnormalized_thetas))
+	print(f"{GREEN}Gradient descent is complete, theta_0: {unnormalized_thetas[0]}, theta_1: {unnormalized_thetas[1]}{RESET}")
+	result_string = f"{str(unnormalized_thetas[0])} {str(unnormalized_thetas[1])}"
+	with open('thetas', 'w') as file:
+		file.write(result_string)
 
 if __name__ == '__main__':
 	main()
