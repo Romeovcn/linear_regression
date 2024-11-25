@@ -42,6 +42,12 @@ def cost_calculate(X, y, thetas):
 	return np.sum((hypothesis(X, thetas) - y) **2) / (2 * len(y))
 
 def gradient(thetas, X, y):
+	"""
+	Calculate the next gradient descent step.
+
+	Parameters: thetas (Matrix filled with thetas), X (Matrix filled with the mileage and 1's), y (Matrix filled with the prices)
+	Returns: A matrix with the new thetas
+	"""
 	learning_rate = 0.1
 	
 	tmp_theta_1 = thetas[1] - (learning_rate * np.sum((hypothesis(X, thetas) - y) * X[:, 1]) / len(y))
@@ -50,6 +56,12 @@ def gradient(thetas, X, y):
 	return np.array([tmp_theta_0, tmp_theta_1])
 
 def gradient_descent(X, y):
+	"""
+	Perform the gradient descent algorithm.
+	
+	Parameters: X (Matrix filled with the mileage and 1's), y (Matrix filled with the prices)
+	Returns: A matrix with the final thetas
+	"""
 	thetas = np.array([0, 0])
 	new_cost = 0
 	max_iterations = 1000
@@ -73,7 +85,7 @@ def main():
 	dataset = pd.read_csv('data.csv')
 	km = dataset['km'].values
 
-	# --- Normalize dataset --- #
+	# --- Normalize using Z-score dataset --- #
 	km_mean = get_mean(km)
 	km_sigma = get_sigma(km)
 	km_normalized = (km - km_mean) / km_sigma
